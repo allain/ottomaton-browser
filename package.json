@@ -1,0 +1,36 @@
+{
+  "name": "ottomaton-browser",
+  "version": "0.0.1",
+  "description": "A library of browser automation actions for use with ottomaton.",
+  "main": "index.js",
+  "scripts": {
+    "test": "blue-tape test/*.js",
+    "lint": "eslint --config .eslintrc index.js test/*.js lib/*.js",
+    "prepublish": "npm run lint && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/allain/ottomaton-browser.git"
+  },
+  "keywords": [
+    "ottomaton",
+    "library",
+    "browser",
+    "automation"
+  ],
+  "author": "Allain Lalonde <allain.lalonde@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/allain/ottomaton-browser/issues"
+  },
+  "homepage": "https://github.com/allain/ottomaton-browser#readme",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "fj-flatten": "^1.0.0",
+    "ottomaton": "^0.7.0",
+    "selenium-webdriver": "^2.47.0"
+  },
+  "devDependencies": {
+    "blue-tape": "^0.1.10"
+  }
+}
