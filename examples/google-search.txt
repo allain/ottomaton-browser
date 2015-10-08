@@ -1,0 +1,6 @@
+# Example File
+Open http://www.google.ca/
+
+Enter Hello into Search Box
+Click Search Button
+Wait for text Hello!

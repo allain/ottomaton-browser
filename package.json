@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "description": "A library of browser automation actions for use with ottomaton.",
   "main": "index.js",
+  "bin": {
+    "otto-browser": "bin/otto-browser"
+  },
   "scripts": {
     "test": "blue-tape test/*.js",
-    "lint": "eslint --config .eslintrc index.js test/*.js lib/*.js",
-    "prepublish": "npm run lint && npm test"
+    "lint": "eslint --config .eslintrc index.js test/*.js lib/*.js"
   },
   "repository": {
     "type": "git",

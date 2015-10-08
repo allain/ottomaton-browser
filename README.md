@@ -39,28 +39,41 @@ Browse to **URL**
 Navigate to **URL**
 
 ### Text Entry
+
 Type **TEXT** into Search
+
 Type **TEXT** into Search Box
+
 Enter **TEXT** into Search
+
 Enter **TEXT** into Search Box
 
 ### Waiting
+
 Wait for text **PATTERN**
 
 ### Clicking
+
 Click on **NAME** Button
+
 Click **NAME** Button
 
 ### HTML Extraction
+
 Extract HTML into **VARIABLE**
+
 Extract HTML as **VARIABLE**
+
 Extract all HTML
 
 ## Example Script
 
 Open http://www.google.ca/
+
 Enter Hello into Search Box
+
 Click Search Button
+
 Wait for text Hello!
  
 
