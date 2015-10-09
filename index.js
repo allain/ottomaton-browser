@@ -3,34 +3,35 @@ var Action = require('ottomaton').Action;
 var selenium = require('selenium-webdriver');
 var By = selenium.By;
 
-module.exports = function () {
-  var driver = new selenium.Builder().withCapabilities(selenium.Capabilities.chrome()).build();
+module.exports = function (ottomaton) {
+  var webdriver = new selenium.Builder().withCapabilities(selenium.Capabilities.chrome()).build();
 
-  var handle = driver.getWindowHandle();
+  var handle = webdriver.getWindowHandle();
 
   return handle.then(function () {
+    ottomaton.webdriver = webdriver;
     return [
       Action([
         /^Open (https?:\/\/[^\s]*)$/i,
         /^Browse to (https?:\/\/[^\s]*)$/i,
         /^Navigate to (https?:\/\/[^\s]*)$/i
       ], function (url) {
-        return driver.get(url);
+        return webdriver.get(url);
       }),
 
       Action([
         /^Type (.+) into(?: the)? Search(?: Box)?$/,
         /^Enter (.+) into(?: the)? Search(?: Box)?$/
       ], function (text) {
-        return driver.findElement(By.name('q')).sendKeys(text);
+        return webdriver.findElement(By.name('q')).sendKeys(text);
       }),
 
       Action([
         /^Wait for text (.*)$/i
       ], function(pattern) {
         pattern = pattern.trim();
-        return driver.wait(function() {
-          return driver.executeScript('return document.querySelector("html").outerText').then(function(text) {
+        return webdriver.wait(function() {
+          return webdriver.executeScript('return document.querySelector("html").outerText').then(function(text) {
             return text && text.indexOf(pattern) !== -1;
           });
         });
@@ -40,7 +41,7 @@ module.exports = function () {
         /^Click on (.+) Button/i,
         /^Click (.+) Button/i
       ], function (buttonName) {
-        return driver.findElements(By.css('button, input[type=button], input[type=submit]')).then(function(buttons) {
+        return webdriver.findElements(By.css('button, input[type=button], input[type=submit]')).then(function(buttons) {
           return Promise.all(buttons.map(function(button) {
             return button.getAttribute('value').then(function(value) {
               return value === buttonName ? button : null;
@@ -69,14 +70,14 @@ module.exports = function () {
 
       Action(Action.FINISH, function () {
         return extractHTML.call(this, 'html').then(function() {
-          return driver.quit();
+          return webdriver.quit();
         });        
       })
     ];
   });
 
   function extractHTML(target) {
-    return driver.executeScript('return document.querySelector("html").outerHTML').then(function (html) {
+    return webdriver.executeScript('return document.querySelector("html").outerHTML').then(function (html) {
       this[target] = html;
     }.bind(this));
   }
