@@ -34,8 +34,11 @@ otto.run([
 ## Provided Actions
 
 ### Navigation
+
 Open **URL**
+
 Browse to **URL**
+
 Navigate to **URL**
 
 ### Text Entry
@@ -47,6 +50,8 @@ Type **TEXT** into Search Box
 Enter **TEXT** into Search
 
 Enter **TEXT** into Search Box
+
+Enter **TEXT** into the Search Box
 
 ### Waiting
 

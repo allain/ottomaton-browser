@@ -19,8 +19,8 @@ module.exports = function () {
       }),
 
       Action([
-        /^Type (.+) into Search(?: Box)?$/,
-        /^Enter (.+) into Search(?: Box)?$/
+        /^Type (.+) into(?: the)? Search(?: Box)?$/,
+        /^Enter (.+) into(?: the)? Search(?: Box)?$/
       ], function (text) {
         return driver.findElement(By.name('q')).sendKeys(text);
       }),
@@ -67,7 +67,7 @@ module.exports = function () {
 
       Action(/^Extract(?: All) HTML$/i, 'Extract HTML into html'),
 
-      Action('FINISH', function () {
+      Action(Action.FINISH, function () {
         return extractHTML.call(this, 'html').then(function() {
           return driver.quit();
         });        
