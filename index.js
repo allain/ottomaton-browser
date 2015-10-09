@@ -9,7 +9,10 @@ module.exports = function (ottomaton) {
   var handle = webdriver.getWindowHandle();
 
   return handle.then(function () {
+    webdriver.By = selenium.By;
+
     ottomaton.webdriver = webdriver;
+
     return [
       Action([
         /^Open (https?:\/\/[^\s]*)$/i,
