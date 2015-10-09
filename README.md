@@ -35,41 +35,42 @@ otto.run([
 
 ### Navigation
 
-Open **URL**
+Open **url**
 
-Browse to **URL**
+Browse to **url**
 
-Navigate to **URL**
+Navigate to **url**
 
 ### Text Entry
 
-Type **TEXT** into Search
+Type **text** into Search
 
-Type **TEXT** into Search Box
+Type **text** into Search Box
 
-Enter **TEXT** into Search
+Enter **text** into Search
 
-Enter **TEXT** into Search Box
+Enter **text** into Search Box
 
-Enter **TEXT** into the Search Box
+Enter **text** into the Search Box
 
 ### Waiting
 
-Wait for text **PATTERN**
+Wait for text **pattern**
 
 ### Clicking
 
-Click on **NAME** Button
+Click on **name** Button
 
-Click **NAME** Button
+Click **name** Button
 
 ### HTML Extraction
 
-Extract HTML into **VARIABLE**
+Extract HTML into **variable**
 
-Extract HTML as **VARIABLE**
+Extract HTML as **variable**
 
 Extract all HTML
+
 
 ## Example Script
 
