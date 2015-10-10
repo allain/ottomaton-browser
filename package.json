@@ -7,8 +7,11 @@
     "otto-browser": "bin/otto-browser"
   },
   "scripts": {
-    "test": "blue-tape test/*.js",
-    "lint": "eslint --fix --config .eslintrc index.js test/*.js lib/*.js"
+    "compile": "babel --stage 2 --optional runtime --source-maps true -d lib/ src/ && chmod +x lib/bin/otto-browser.js",
+    "clean": "rm -r lib",
+    "pretest": "npm run compile",
+    "test": "blue-tape test/*.js | tap-dot",
+    "prepublish": "npm run clean && npm run test"
   },
   "repository": {
     "type": "git",
@@ -27,12 +30,14 @@
   },
   "homepage": "https://github.com/allain/ottomaton-browser#readme",
   "dependencies": {
+    "babel-runtime": "^5.8.25",
     "debug": "^2.2.0",
     "fj-flatten": "^1.0.0",
     "ottomaton": "~0.x.x",
     "selenium-webdriver": "^2.47.0"
   },
   "devDependencies": {
-    "blue-tape": "^0.1.10"
+    "blue-tape": "^0.1.10",
+    "tap-dot": "^1.0.0"
   }
 }

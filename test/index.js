@@ -2,7 +2,7 @@ var test = require('blue-tape');
 var Ottomaton = require('ottomaton');
 
 test('collects html of last page on FINISH', function(t) {
-  return Ottomaton().register(require('..')).run([
+  return Ottomaton().register(require('../lib/.')).run([
     'Open http://www.google.ca/'
   ]).then(function(result) {
     t.ok(result.html.indexOf('Google') !== -1, 'page should contain Google');
@@ -10,7 +10,7 @@ test('collects html of last page on FINISH', function(t) {
 });
 
 test('Can Open Url and Read Page', function(t) {
-  return Ottomaton().register(require('..')).run([
+  return Ottomaton().register(require('../lib/.')).run([
     'Open http://www.google.ca/',
     'Extract HTML as page1'
   ]).then(function(result) {
@@ -19,7 +19,7 @@ test('Can Open Url and Read Page', function(t) {
 });
 
 test('Supports Form Submission', function(t) {
-  return Ottomaton().register(require('..')).run([
+  return Ottomaton().register(require('../lib/.')).run([
     'Open http://www.google.ca/',
     'Enter Hello into Search Box',
     'Click Search Button',

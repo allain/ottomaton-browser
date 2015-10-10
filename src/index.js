@@ -31,10 +31,10 @@ module.exports = function (ottomaton) {
 
       Action([
         /^Wait for text (.*)$/i
-      ], function(pattern) {
+      ], function (pattern) {
         pattern = pattern.trim();
-        return webdriver.wait(function() {
-          return webdriver.executeScript('return document.querySelector("html").outerText').then(function(text) {
+        return webdriver.wait(function () {
+          return webdriver.executeScript('return document.querySelector("html").outerText').then(function (text) {
             return text && text.indexOf(pattern) !== -1;
           });
         });
@@ -44,16 +44,16 @@ module.exports = function (ottomaton) {
         /^Click on (.+) Button/i,
         /^Click (.+) Button/i
       ], function (buttonName) {
-        return webdriver.findElements(By.css('button, input[type=button], input[type=submit]')).then(function(buttons) {
-          return Promise.all(buttons.map(function(button) {
-            return button.getAttribute('value').then(function(value) {
+        return webdriver.findElements(By.css('button, input[type=button], input[type=submit]')).then(function (buttons) {
+          return Promise.all(buttons.map(function (button) {
+            return button.getAttribute('value').then(function (value) {
               return value === buttonName ? button : null;
             });
-          })).then(function(buttons) {
+          })).then(function (buttons) {
             return buttons.filter(Boolean);
-          }).then(function(buttons) {
+          }).then(function (buttons) {
             return buttons[0];
-          }).then(function(button) {
+          }).then(function (button) {
             if (!button) throw new Error('Button Not Found: ' + buttonName);
 
             return button.click();
@@ -62,9 +62,34 @@ module.exports = function (ottomaton) {
       }),
 
       Action([
+        /^Type (.+) into (.+) box$/i,
+        /^Type (.+) into (.+)$/i
+      ], function (text, field) {
+        return webdriver.findElement(By.xpath('//input[contains(@name,"' + field + '")]')).then(function (input) {
+          if (!input) throw new Error('Text Field Not Found: ' + field);
+
+          return input.sendKeys(text);
+        });
+      }),
+
+      Action([
+        /^Click on (.+) Link/i,
+        /^Click (.+) Link/i
+      ], function (linkText) {
+        return webdriver.findElements(By.xpath('//a[contains(.,"' + linkText + '")]')).then(function (links) {
+          var link = links[0];
+          if (!link) throw new Error('Link Not Found: ' + linkText);
+
+          return link.isDisplayed().then(function (visible) {
+            return link.click();
+          });
+        });
+      }),
+
+      Action([
         /^Extract HTML into (.*)$/i,
         /^Extract HTML as (.*)$/i
-      ], function(target) {
+      ], function (target) {
         console.log(target);
         return extractHTML.call(this, target);
       }),
@@ -72,9 +97,9 @@ module.exports = function (ottomaton) {
       Action(/^Extract(?: All) HTML$/i, 'Extract HTML into html'),
 
       Action(Action.FINISH, function () {
-        return extractHTML.call(this, 'html').then(function() {
+        return extractHTML.call(this, 'html').then(function () {
           return webdriver.quit();
-        });        
+        });
       })
     ];
   });
