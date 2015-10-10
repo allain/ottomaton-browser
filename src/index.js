@@ -1,114 +1,114 @@
-var Action = require('ottomaton').Action;
+import { Action } from 'ottomaton';
 
-var selenium = require('selenium-webdriver');
-var By = selenium.By;
+import selenium from 'selenium-webdriver';
 
-module.exports = function (ottomaton) {
-  var webdriver = new selenium.Builder().withCapabilities(selenium.Capabilities.chrome()).build();
+const By = selenium.By;
 
-  var handle = webdriver.getWindowHandle();
+export default async function (ottomaton) {
+  const webdriver = new selenium.Builder().withCapabilities(selenium.Capabilities.chrome()).build();
 
-  return handle.then(function () {
-    webdriver.By = selenium.By;
+  // Wait tillt he browser is actually loaded
+  const handle = await webdriver.getWindowHandle();
 
-    ottomaton.webdriver = webdriver;
+  webdriver.By = selenium.By;
 
-    return [
-      Action([
-        /^Open (https?:\/\/[^\s]*)$/i,
-        /^Browse to (https?:\/\/[^\s]*)$/i,
-        /^Navigate to (https?:\/\/[^\s]*)$/i
-      ], function (url) {
-        return webdriver.get(url);
-      }),
+  ottomaton.webdriver = webdriver;
 
-      Action([
-        /^Type (.+) into(?: the)? Search(?: Box)?$/,
-        /^Enter (.+) into(?: the)? Search(?: Box)?$/
-      ], function (text) {
-        return webdriver.findElement(By.name('q')).sendKeys(text);
-      }),
+  return [
+    Action([
+      /^Open (https?:\/\/[^\s]*)$/i,
+      /^Browse to (https?:\/\/[^\s]*)$/i,
+      /^Navigate to (https?:\/\/[^\s]*)$/i
+    ], url => webdriver.get(url)),
 
-      Action([
-        /^Wait for text (.*)$/i
-      ], function (pattern) {
-        pattern = pattern.trim();
-        return webdriver.wait(function () {
-          return webdriver.executeScript('return document.querySelector("html").outerText').then(function (text) {
-            return text && text.indexOf(pattern) !== -1;
-          });
-        });
-      }),
+    Action([
+      /^Type (.+) into(?: the)? Search(?: Box)?$/,
+      /^Enter (.+) into(?: the)? Search(?: Box)?$/
+    ], async function(text) {
+      let searchBox = await webdriver.findElement(By.name('q'));
+      if (!searchBox)
+        throw new Error('Search Box not found');
 
-      Action([
-        /^Click on (.+) Button/i,
-        /^Click (.+) Button/i
-      ], function (buttonName) {
-        return webdriver.findElements(By.css('button, input[type=button], input[type=submit]')).then(function (buttons) {
-          return Promise.all(buttons.map(function (button) {
-            return button.getAttribute('value').then(function (value) {
-              return value === buttonName ? button : null;
-            });
-          })).then(function (buttons) {
-            return buttons.filter(Boolean);
-          }).then(function (buttons) {
-            return buttons[0];
-          }).then(function (button) {
-            if (!button) throw new Error('Button Not Found: ' + buttonName);
+      searchBox.sendKeys(text);
+    }),
 
-            return button.click();
-          });
-        });
-      }),
+    Action([
+      /^Wait for text (.*)$/i
+    ], function(pattern) {
+      pattern = pattern.trim();
+      return webdriver.wait(async function () {
+        var text = await webdriver.executeScript('return document.querySelector("html").outerText');
 
-      Action([
-        /^Type (.+) into (.+) box$/i,
-        /^Type (.+) into (.+)$/i
-      ], function (text, field) {
-        return webdriver.findElement(By.xpath('//input[contains(@name,"' + field + '")]')).then(function (input) {
-          if (!input) throw new Error('Text Field Not Found: ' + field);
+        return text && text.indexOf(pattern) !== -1;
+      });
+    }),
 
-          return input.sendKeys(text);
-        });
-      }),
+    Action([
+      /^Click on (.+) Button/i,
+      /^Click (.+) Button/i
+    ], async function (buttonName) {
+      let buttons = await webdriver.findElements(By.css('button, input[type=button], input[type=submit]'));
 
-      Action([
-        /^Click on (.+) Link/i,
-        /^Click (.+) Link/i
-      ], function (linkText) {
-        return webdriver.findElements(By.xpath('//a[contains(.,"' + linkText + '")]')).then(function (links) {
-          var link = links[0];
-          if (!link) throw new Error('Link Not Found: ' + linkText);
+      let button = findWithValue(buttons, buttonName);
+      if (!button)
+        throw new Error('Button Not Found: ' + buttonName);
 
-          return link.isDisplayed().then(function (visible) {
-            return link.click();
-          });
-        });
-      }),
+      return button.click();
+    }),
 
-      Action([
-        /^Extract HTML into (.*)$/i,
-        /^Extract HTML as (.*)$/i
-      ], function (target) {
-        console.log(target);
-        return extractHTML.call(this, target);
-      }),
+    Action([
+      /^Type (.+) into (.+) box$/i,
+      /^Type (.+) into (.+)$/i
+    ], async function(text, field) {
+      let input = await webdriver.findElement(By.xpath('//input[contains(@name,"' + field + '")]'));
+      if (!input)
+        throw new Error('Text Field Not Found: ' + field);
 
-      Action(/^Extract(?: All) HTML$/i, 'Extract HTML into html'),
+      return input.sendKeys(text);
+    }),
 
-      Action(Action.FINISH, function () {
-        return extractHTML.call(this, 'html').then(function () {
-          return webdriver.quit();
-        });
-      })
-    ];
-  });
+    Action([
+      /^Click on (.+) Link/i,
+      /^Click (.+) Link/i
+    ], async function(linkText) {
+      var links = await webdriver.findElements(By.xpath('//a[contains(.,"' + linkText + '")]'));
 
-  function extractHTML(target) {
-    return webdriver.executeScript('return document.querySelector("html").outerHTML').then(function (html) {
-      this[target] = html;
-    }.bind(this));
+      var link = links[0];
+      if (!link)
+        throw new Error('Link Not Found: ' + linkText);
+
+      // Seems to wait till the sreen is not in transition (dialog opening, etc)
+      await link.isDisplayed();
+
+      return link.click();
+    }),
+
+    Action([
+      /^Extract HTML into (.*)$/i,
+      /^Extract HTML as (.*)$/i
+    ], function (target) {
+      return extractHTML.call(this, target);
+    }),
+
+    Action(/^Extract(?: All) HTML$/i, 'Extract HTML into html'),
+
+    Action(Action.FINISH,  async function() {
+      await extractHTML.call(this, 'html');
+
+      return webdriver.quit();
+    })
+  ];
+
+  async function extractHTML(target) {
+    var html = await webdriver.executeScript('return document.querySelector("html").outerHTML');
+    this[target] = html;
+  }
+
+
+  function findWithValue(collection, value) {
+    return collection.find(async function(item) {
+      let current = await button.getAttribute('value');
+      return current === value;
+    });
   }
 };
-
-
