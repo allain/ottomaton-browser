@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Page 1</h1>
+
+Search: <input type="text" name="q">
+
+<input id ="delayedInput" />
+
+<script>
+setTimeout(function() {
+  document.getElementById('delayedInput').name = 'delayed';
+}, 1000);
+</script>
+</body>
+</html>

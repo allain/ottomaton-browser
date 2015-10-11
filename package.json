@@ -10,8 +10,10 @@
     "compile": "babel --stage 2 --optional runtime --source-maps true -d lib/ src/ && chmod +x lib/bin/otto-browser.js",
     "clean": "rm -r lib",
     "pretest": "npm run compile",
-    "test": "blue-tape test/*.js | tap-dot",
-    "prepublish": "npm run clean && npm run test"
+    "test": "blue-tape test/*.js",
+    "prepublish": "npm run clean && npm run test",
+    "watch": "watch 'npm run compile' src/ test/",
+    "watch-test": "watch 'npm test' src/ test/"
   },
   "repository": {
     "type": "git",
@@ -32,12 +34,14 @@
   "dependencies": {
     "babel-runtime": "^5.8.25",
     "debug": "^2.2.0",
+    "factorize": "^1.0.0",
     "fj-flatten": "^1.0.0",
     "ottomaton": "~0.x.x",
     "selenium-webdriver": "^2.47.0"
   },
   "devDependencies": {
     "blue-tape": "^0.1.10",
-    "tap-dot": "^1.0.0"
+    "tap-dot": "^1.0.0",
+    "watch": "^0.16.0"
   }
 }
