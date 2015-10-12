@@ -13,7 +13,7 @@
     "test": "blue-tape test/*.js",
     "prepublish": "npm run clean && npm run test",
     "watch": "watch 'npm run compile' src/ test/",
-    "watch-test": "watch 'npm test' src/ test/"
+    "dev": "watch 'npm test' src/ test/"
   },
   "repository": {
     "type": "git",

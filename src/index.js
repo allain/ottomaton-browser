@@ -1,10 +1,10 @@
 import { Action } from 'ottomaton';
-
 import selenium from 'selenium-webdriver';
+
+import Waiter from './waiter';
 
 const debug = require('debug')('ottomaton-browser');
 
-const ActionSequence = selenium.ActionSequence;
 const By = selenium.By;
 
 export default async function (ottomaton) {
@@ -16,11 +16,11 @@ export default async function (ottomaton) {
   webdriver.By = selenium.By;
 
   ottomaton.webdriver = webdriver;
+  ottomaton.extraState.webdriver = webdriver;
+  ottomaton.extraState.wait = new Waiter(webdriver);
 
-  var actions = [];
-
-  ['navigating', 'clicking', 'waiting', 'typing', 'extracting'].forEach(type => {
-    actions.push(require('./actions/' + type)(webdriver, ottomaton));
+  var actions = ['navigating', 'clicking', 'waiting', 'typing', 'extracting'].map(type => {
+    return require('./actions/' + type)(webdriver, ottomaton);
   });
 
   // Register FINISH to close the driver and record the last page's html
@@ -30,7 +30,6 @@ export default async function (ottomaton) {
     if (!this.keep)
       return webdriver.quit();
   }));
-
 
   return actions;
 };

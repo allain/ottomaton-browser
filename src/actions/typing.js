@@ -16,8 +16,14 @@ module.exports = function(webdriver, ottomaton) {
     Action([
       /^Type (.+) into (.+) box$/i,
       /^Type (.+) into (.+)$/i
-    ], async function(text, fieldName) {
-      let input = await wait.forFieldNamed(fieldName);
+    ], async function(text, target) {
+      target = target.trim();
+      let input;
+      if (target.indexOf('//') === 0) {
+        input = await wait.forElement(target);
+      } else {
+        input = await wait.forFieldNamed(target);
+      }
 
       return input.sendKeys(text);
     }),

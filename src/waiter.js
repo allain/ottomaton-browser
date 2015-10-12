@@ -5,13 +5,24 @@ const debug = require('debug')('ottomaton:waiter');
 function Waiter(webdriver) {
   const By = webdriver.By;
 
-  async function until(predicate) {
+  async function until(predicate, timeout = 10000, interval = 100) {
     let result;
     let count = 0;
+    let startTime = Date.now();
+
+    let slowedPredicate = async function() {
+      var result = await predicate();
+      if (!result) {
+        await ms(interval);
+      }
+
+      return result;
+    };
 
     while (true) {
       try {
-        result = await webdriver.wait(predicate);
+        result = await webdriver.wait(slowedPredicate, timeout);
+        debug('predicate returned: %j', result);
         if (Array.isArray(result) && result.length > 0) {
           break;
         } else if (result) {
@@ -21,7 +32,11 @@ function Waiter(webdriver) {
         debug(e.message);
       }
 
-      await delay(1000);
+      await ms(interval);
+
+      if (Date.now() - startTime >= interval) {
+        throw new Error('timeout');
+      }
 
       debug('waiting... %d', ++count);
     }
@@ -29,12 +44,12 @@ function Waiter(webdriver) {
     return result;
   };
 
-  function forElement(predicate) {
+  function forElement(predicate, timeout = 10000) {
     if (typeof predicate === 'string') {
       if (predicate.match(/^\/\//)) {
         let xpath = predicate;
         predicate = function() {
-          return webdriver.findElements(By.xpath(xPath));
+          return webdriver.findElements(By.xpath(xpath));
         };
       } else {
         throw new Error('Invalid Element Predicate:' + predicate);
@@ -62,10 +77,10 @@ function Waiter(webdriver) {
         return false;
 
       return element;
-    });
+    }, timeout);
   };
 
-  async function forText(pattern) {
+  async function forText(pattern, timeout = 10000) {
     pattern = pattern.trim();
     debug('Waiting for text: ' + pattern);
 
@@ -73,77 +88,71 @@ function Waiter(webdriver) {
       var text = await forScript('return document.querySelector("html").outerText');
 
       return text && text.indexOf(pattern) !== -1;
-    });
+    }, timeout);
 
     debug('Text Found');
     return true;
   };
 
-  async function forFieldNamed(field) {
+  async function forFieldNamed(field, timeout = 10000) {
     debug('Waiting for field named: %s', field);
 
     let element = await forElement(async function() {
       return await webdriver.findElements(By.xpath('//input[contains(@name,"' + field + '")]'));
-    });
+    }, timeout);
 
     debug('field found');
 
     return element;
   };
 
-  async function forLink(linkText) {
+  async function forLink(linkText, timeout = 10000) {
     debug('waiting for link with text: %s', linkText);
 
-    let element = await forElement('//a[contains(.,"' + linkText + '")]');
+    let element = await forElement('//a[contains(.,"' + linkText + '")]', timeout);
 
     debug('link found');
 
     return element;
   };
 
-  function forButton(buttonName) {
+  async function forButton(target, timeout = 10000) {
     return until(async function() {
-      debug('Trying to find button with value set to %s', buttonName);
-      let buttons = await forButtonValued(buttonName);
-      if (Array.isArray(buttons) && buttons.length)
-        return buttons[0];
+      let buttons;
 
-      debug('Not found');
+      if (target.indexOf('//') === 0) {
+        buttons = await forElements(target);
+      }
 
-      debug('Trying to find button containing text %s', buttonName);
-      buttons = await forButtonLabelled(buttonName);
-      if (Array.isArray(buttons) && buttons.length)
-        return buttons[0];
+      if (!Array.isArray(buttons) || !buttons.length) {
+        let cssSelector = `button[value="${target}"], input[type=button][value="${target}"], input[type=submit][value="${target}"]`;
+        buttons = await webdriver.findElements(By.css(cssSelector));
+      }
 
-      debug('Not Found');
+      if (!Array.isArray(buttons) || !buttons.length) {
+        buttons = await webdriver.findElements(By.xpath('//button[contains(.,"' + target + '")]'));
+      }
+
+      if (!Array.isArray(buttons) || !buttons.length) {
+        debug('Not Found');
+        return null;
+      }
+
+      buttons = buttons.filter(async function(b){
+        return await e.isDisplayed() && await element.isEnabled();
+      });
+
+      return buttons[0];
     });
   };
 
-  function forScript(script) {
+  function forScript(script, timeout = 10000) {
     return webdriver.wait(function () {
       return webdriver.executeScript(script);
     });
   };
 
-
-  /*this.findWithValue = function findWithValue(collection, value) {
-    return collection.find(async function(item) {
-      let current = await button.getAttribute('value');
-      return current === value;
-    });
-  }*/
-
-
-  function forButtonValued(value) {
-    let cssSelector = `button[value="${value}"], input[type=button][value="${value}"], input[type=submit][value="${value}"]`;
-    return webdriver.findElements(By.css(cssSelector));
-  };
-
-  function forButtonLabelled(label) {
-    return webdriver.findElements(By.xpath('//button[contains(.,"' + label + '")]'));
-  };
-
-  function forActionable(actionSequence) {
+  function forActionable(actionSequence, timeout = 10000) {
     return until(function() {
       return actionSequence.perform();
     });
@@ -151,15 +160,13 @@ function Waiter(webdriver) {
 
   function ms(millis) {
     return new Promise(function(resolve) {
-      setTimeout(resolve, ms);
+      setTimeout(resolve, millis);
     });
   };
 
   return {
     forActionable,
     forButton,
-    forButtonLabelled,
-    forButtonValued,
     forElement,
     forFieldNamed,
     forLink,
