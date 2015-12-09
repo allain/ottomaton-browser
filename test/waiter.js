@@ -5,7 +5,7 @@ var debug = require('debug')('test:waiter');
 var Ottomaton = require('ottomaton');
 
 test('waiter - is exposed in action', function(t) {
-  Ottomaton().register(require('../lib/.')).register('test', function() {
+  Ottomaton({headless: true}).register(require('../lib/.')).register('test', function() {
     t.ok(this.ottomaton.extraState.wait, 'waiter is exposed in ottomaton extra state');
     t.ok(this.wait, 'waiter is exposed');
     t.equal(typeof this.wait.until, 'function', 'waiter has proper ducktype');
@@ -15,7 +15,7 @@ test('waiter - is exposed in action', function(t) {
 
 test('waiter - until returns when predicate returns true', function(t) {
   var waits = 0;
-  return new Ottomaton().register(require('../lib/.')).register('test', function() {
+  return new Ottomaton({headless: true}).register(require('../lib/.')).register('test', function() {
     return this.wait.until(function() {
       waits ++;
 
@@ -25,7 +25,7 @@ test('waiter - until returns when predicate returns true', function(t) {
 });
 
 test('waiter - until fails if predicate does not return truthy in timeout', function(t) {
-  return new Ottomaton().register(require('../lib/.')).register('test', function() {
+  return new Ottomaton({headless: true}).register(require('../lib/.')).register('test', function() {
     return this.wait.until(function() {
       debug('predicate running');
       return false;
@@ -37,7 +37,7 @@ test('waiter - until fails if predicate does not return truthy in timeout', func
 
 test('waiter - until never calls predicate faster then interal', function(t) {
   var INTERVAL = 50;
-  return new Ottomaton().register(require('../lib/.')).register('test', function() {
+  return new Ottomaton({headless: true}).register(require('../lib/.')).register('test', function() {
     var lastCall = null;
     var waits = 0;
     return this.wait.until(function() {

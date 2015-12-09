@@ -10,10 +10,11 @@ const By = selenium.By;
 export default async function (ottomaton) {
   const webdriver = new selenium.Builder().withCapabilities(selenium.Capabilities.chrome()).build();
 
-  // Wait tillt he browser is actually loaded
+  // Wait till the browser is actually loaded
   const handle = await webdriver.getWindowHandle();
 
   webdriver.By = selenium.By;
+  webdriver.Key = selenium.Key;
 
   ottomaton.webdriver = webdriver;
   ottomaton.extraState.webdriver = webdriver;

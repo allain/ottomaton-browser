@@ -1,17 +1,18 @@
 import { Action } from 'ottomaton';
 import Waiter from '../waiter';
 
+const debug = require('debug')('ottomaton:browser:typing');
+
 module.exports = function(webdriver, ottomaton) {
   const wait = Waiter(webdriver);
+
+  const Key = webdriver.Key;
 
   return [
     Action([
       /^Type (.+) into(?: the)? Search(?: Box)?$/,
       /^Enter (.+) into(?: the)? Search(?: Box)?$/
-    ], async function(text) {
-      let searchBox = await wait.forFieldNamed('q');
-      searchBox.sendKeys(text);
-    }),
+    ], text => `Type ${text} into q`),
 
     Action([
       /^Type (.+) into (.+) box$/i,
@@ -25,8 +26,11 @@ module.exports = function(webdriver, ottomaton) {
         input = await wait.forFieldNamed(target);
       }
 
-      return input.sendKeys(text);
-    }),
+      await input.sendKeys(Key.chord(Key.CONTROL, 'a'), '' + text);
+
+      // After typing we force a blur event to cause any watching buttons
+      await webdriver.executeScript('var els = document.querySelectorAll("input,textarea"); if (!els && els.length === 0) return; var i = els.length; while (--i && i>=0) { els.item(i).blur(); };');
+    })
   ];
 
 };

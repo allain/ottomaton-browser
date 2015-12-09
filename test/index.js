@@ -6,7 +6,7 @@ var OpenPage1 = 'Open file://' + path.resolve(__dirname, 'fixtures/page1.html');
 
 test('collects html of last page on FINISH', function(t) {
   var state = {};
-  return Ottomaton().register(require('../lib/.')).run([
+  return Ottomaton({headless: true}).register(require('../lib/.')).run([
     OpenPage1
   ], state).then(function(result) {
     t.equal(result, state);
@@ -15,7 +15,7 @@ test('collects html of last page on FINISH', function(t) {
 });
 
 test('can extract html as a prop', function(t) {
-  return Ottomaton().register(require('../lib/.')).run([
+  return Ottomaton({headless: true}).register(require('../lib/.')).run([
     OpenPage1,
     'Extract HTML as page1'
   ]).then(function(result) {
@@ -24,7 +24,7 @@ test('can extract html as a prop', function(t) {
 });
 
 test('Supports Form Submission', function(t) {
-  return Ottomaton().register(require('../lib/.')).run([
+  return Ottomaton({headless: true}).register(require('../lib/.')).run([
     'Open http://www.google.ca',
     'Enter Hello into Search Box',
     'Click Search Button',
@@ -35,7 +35,7 @@ test('Supports Form Submission', function(t) {
 });
 
 test('Supports typing in fields that will eventually exist', function(t) {
-  return Ottomaton().register(require('../lib/.')).run([
+  return Ottomaton({headless: true}).register(require('../lib/.')).run([
     OpenPage1,
     'Type Hello into delayed box'
   ]);

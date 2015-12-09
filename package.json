@@ -34,6 +34,7 @@
   "dependencies": {
     "babel-runtime": "^5.8.25",
     "debug": "^2.2.0",
+    "defaults": "^1.0.3",
     "factorize": "^1.0.0",
     "fj-flatten": "^1.0.0",
     "ottomaton": "~0.x.x",

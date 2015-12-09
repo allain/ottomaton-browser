@@ -7,13 +7,6 @@ module.exports = function(webdriver, ottomaton) {
   const wait = Waiter(webdriver);
 
   return [
-    Action(/^Extract(?: All) HTML$/i, 'Extract HTML into html'),
-
-    Action([
-      /^Extract HTML into (.*)$/i,
-      /^Extract HTML as (.*)$/i
-    ], extractHTML),
-
     Action([
       /^Extract Text after label (.*) into (.*)$/,
       /^Extract Text after the label (.*) into (.*)$/,
@@ -27,22 +20,27 @@ module.exports = function(webdriver, ottomaton) {
     Action([
       /^Extract Text from (.*) into (.*)$/i
     ], async function extractText(src, target) {
-      src = this.deref(src);
+      var el = await wait.forElement(this.deref(src));
+      this[target] = await el.getAttribute('innerText');
+    }, {
+      deref: false
+    }),
 
-      debug('Looking for element matching %s', src);
-      var el = await wait.forElement(src);
-      debug('Element found: ', el);
+    Action([
+      /^Extract HTML into (.*)$/i,
+      /^Extract HTML as (.*)$/i
+    ], async function(target) {
+      var html = await webdriver.executeScript('return document.querySelector("html").outerHTML');
+      this[target] = html;
+    }),
 
-      var text = await el.getAttribute('innerText');
-
-      this[target] = text;
-    }, { deref: false })
+    Action([
+      /^Extract(?: All) HTML$/i,
+      /^Extract HTML from (.*) into (.*)$/i
+    ], async function(src, target = 'html') {
+      var el = await wait.forElement(this.deref(src));
+      this[target] = await el.getAttribute('outerHTML');
+    })
   ];
-
-  async function extractHTML(target) {
-    var html = await webdriver.executeScript('return document.querySelector("html").outerHTML');
-
-    this[target] = html;
-  }
 };
 

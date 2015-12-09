@@ -7,10 +7,26 @@ Search: <input type="text" name="q">
 
 <input id ="delayedInput" />
 
+<input class="btn" data-id="button1" value="button1" type="button" />
+<input class="btn" data-id="button2" value="button2" type="submit" />
+<button class="btn" data-id="button3" type="submit" value="button3">B3</button>
+<input type="submit" data-id="button4" class="btn" id="button4" />
+
+<input class="btn" data-id="disabled1" value="disabled1" type="button" disabled="disabled" />
+<input class="btn" data-id="check1" name="check1" value="1" type="checkbox" />
+
+<div style="height:1000px"></div>
+<input class="btn" data-id="offscreen-check2" name="offscreen-check2" value="1" type="checkbox" />
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script>
 setTimeout(function() {
   document.getElementById('delayedInput').name = 'delayed';
 }, 1000);
+
+$('.btn').click(function() {
+  $('html').append('<p>' + this.dataset.id  + ' clicked</p>');
+});
+
 </script>
 </body>
 </html>

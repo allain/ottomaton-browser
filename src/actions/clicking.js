@@ -5,25 +5,38 @@ import { ActionSequence } from 'selenium-webdriver';
 
 const debug = require('debug')('ottomaton:clicking');
 
-
 module.exports = function(webdriver, ottomaton) {
-  const wait = Waiter(webdriver);
+  const wait = Waiter(webdriver, {
+    defaultTimeout: ottomaton.opts.defaultTimeout
+  });
 
   return [
-    Action([
-      /^Click on (.+) Button/i,
-      /^Click (.+) Button/i
-    ], async function (buttonName) {
-      let button = await wait.forButton(buttonName);
+    Action(/^Check Checkbox (.*)/i, async function(checkboxName) {
+      let checkbox = await wait.forCheckbox(checkboxName);
+
+      //await webdriver.moveTo(checkbox);
+
       await wait.until(async function() {
-        await new ActionSequence(webdriver).click(button).perform();
+        let result = await new ActionSequence(webdriver).click(checkbox).perform();
         return true;
       });
 
-      debug('clicked');
-      debug('sleeping for 1000ms');
       await wait.ms(1000);
-      debug('done sleeping');
+    }),
+
+    Action([
+      /^Click on (.+) Button/i,
+      /^Click (.+) Button/i
+    ], async function (target) {
+      let button = await wait.forButton(target);
+
+      await wait.until(async function() {
+        let result = await new ActionSequence(webdriver).click(button).perform();
+        debug('click result', result);
+        return true;
+      });
+
+      await wait.ms(1000);
     }),
 
     Action([

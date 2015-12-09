@@ -1,11 +1,16 @@
 import factorize from 'factorize';
+import defaults from 'defaults';
 
 const debug = require('debug')('ottomaton:waiter');
 
-function Waiter(webdriver) {
+function Waiter(webdriver, opts) {
+  opts = defaults(opts, { defaultTimeout: 60 * 1000 });
+
   const By = webdriver.By;
 
-  async function until(predicate, timeout = 10000, interval = 100) {
+  const DEFAULT_TIMEOUT = opts.defaultTimeout;
+
+  async function until(predicate, timeout = DEFAULT_TIMEOUT, interval = 100) {
     let result;
     let count = 0;
     let startTime = Date.now();
@@ -22,10 +27,17 @@ function Waiter(webdriver) {
     while (true) {
       try {
         result = await webdriver.wait(slowedPredicate, timeout);
-        debug('predicate returned: %j', result);
+
         if (Array.isArray(result) && result.length > 0) {
+          debug('predicate returned: %j elements', result.length);
+
           break;
         } else if (result) {
+          if (typeof result === 'object') {
+            debug('predicate returned: 1 element');
+          } else {
+            debug('predicate returned: %j', result);
+          }
           break;
         }
       } catch(e) {
@@ -42,9 +54,9 @@ function Waiter(webdriver) {
     }
 
     return result;
-  };
+  }
 
-  function forElement(predicate, timeout = 10000) {
+  function forElements(predicate, timeout = DEFAULT_TIMEOUT) {
     if (typeof predicate === 'string') {
       if (predicate.match(/^\/\//)) {
         let xpath = predicate;
@@ -58,29 +70,27 @@ function Waiter(webdriver) {
 
     return until(async function() {
       var elements = await predicate();
+      debug('elements: %j', elements);
       if (!Array.isArray(elements)) return false;
 
       if (elements.length === 0) {
         return false;
       }
 
-      debug('%d elements found', elements.length);
-      var element = elements[0];
-      var isDisplayed = await element.isDisplayed();
-      debug('isDisplayed', isDisplayed);
-      if (!isDisplayed)
-        return false;
+      elements = elements.filter(async function(el) {
+        return await el.isDisplayed() && await el.isEnabled();
+      });
 
-      var isEnabled = await element.isEnabled();
-      debug('isEnabled', isEnabled);
-      if (!isEnabled)
-        return false;
-
-      return element;
+      return elements.length ? elements : null;
     }, timeout);
-  };
+  }
 
-  async function forText(pattern, timeout = 10000) {
+  async function forElement(predicate, timeout = DEFAULT_TIMEOUT) {
+    let elements = await forElements(predicate, timeout);
+    return elements[0];
+  }
+
+  async function forText(pattern, timeout = DEFAULT_TIMEOUT) {
     pattern = pattern.trim();
     debug('Waiting for text: ' + pattern);
 
@@ -90,11 +100,12 @@ function Waiter(webdriver) {
       return text && text.indexOf(pattern) !== -1;
     }, timeout);
 
-    debug('Text Found');
+    debug('FOUND');
+
     return true;
   };
 
-  async function forFieldNamed(field, timeout = 10000) {
+  async function forFieldNamed(field, timeout = DEFAULT_TIMEOUT) {
     debug('Waiting for field named: %s', field);
 
     let element = await forElement(async function() {
@@ -106,7 +117,7 @@ function Waiter(webdriver) {
     return element;
   };
 
-  async function forLink(linkText, timeout = 10000) {
+  async function forLink(linkText, timeout = DEFAULT_TIMEOUT) {
     debug('waiting for link with text: %s', linkText);
 
     let element = await forElement('//a[contains(.,"' + linkText + '")]', timeout);
@@ -116,46 +127,95 @@ function Waiter(webdriver) {
     return element;
   };
 
-  async function forButton(target, timeout = 10000) {
+  async function forButton(target, timeout = DEFAULT_TIMEOUT) {
     return until(async function() {
       let buttons;
 
       if (target.indexOf('//') === 0) {
         buttons = await forElements(target);
+        debug('buttons found using xpath: %s %j', target, buttons);
       }
 
       if (!Array.isArray(buttons) || !buttons.length) {
         let cssSelector = `button[value="${target}"], input[type=button][value="${target}"], input[type=submit][value="${target}"]`;
         buttons = await webdriver.findElements(By.css(cssSelector));
+        debug('buttons found with value: %s %j', target, buttons);
+      }
+
+      if (!Array.isArray(buttons) || !buttons.length) {
+        let cssSelector = `button[name="${target}"], input[type=button][name="${target}"], input[type=submit][name="${target}"]`;
+        buttons = await webdriver.findElements(By.css(cssSelector));
+        debug('buttons found with name: %s %j', target, buttons);
       }
 
       if (!Array.isArray(buttons) || !buttons.length) {
         buttons = await webdriver.findElements(By.xpath('//button[contains(.,"' + target + '")]'));
+        debug('buttons found with label: %s %j', target, buttons);
       }
 
       if (!Array.isArray(buttons) || !buttons.length) {
-        debug('Not Found');
+        debug('Not Buttons Found');
         return null;
       }
 
-      buttons = buttons.filter(async function(b){
-        return await e.isDisplayed() && await element.isEnabled();
-      });
+      let usableButtons = await Promise.all(buttons.map(async function(b) {
+        return (await b.isDisplayed() && await b.isEnabled) ? b : null;
+      }));
 
-      return buttons[0];
-    });
+      usableButtons = usableButtons.filter(Boolean);
+
+      debug('usable buttons %d', usableButtons.length);
+
+      return usableButtons[0];
+    }, timeout);
   };
 
-  function forScript(script, timeout = 10000) {
+  async function forCheckbox(target, timeout = DEFAULT_TIMEOUT) {
+    return until(async function() {
+      let checkboxes;
+
+      if (target.indexOf('//') === 0) {
+        checkboxes = await forElements(target);
+        debug('checkboxes found using xpath: %s %j', target, checkboxes);
+      }
+
+      if (!Array.isArray(checkboxes) || !checkboxes.length) {
+        let cssSelector = `input[type=checkbox][name="${target}"]`;
+        checkboxes = await webdriver.findElements(By.css(cssSelector));
+        debug('checkboxes found with name: %s %j', target, checkboxes);
+      }
+
+      if (!Array.isArray(checkboxes) || !checkboxes.length) {
+        debug('Not Checkboxes Found');
+        return null;
+      }
+
+      let usableCheckboxes = await Promise.all(checkboxes.map(async function(c) {
+        return (await c.isDisplayed() && await c.isEnabled) ? c : null;
+      }));
+
+      usableCheckboxes = usableCheckboxes.filter(Boolean);
+
+      debug('usable checkboxes %d', usableCheckboxes.length);
+
+      return usableCheckboxes[0];
+    }, timeout);
+  };
+
+  function forScript(script, timeout = DEFAULT_TIMEOUT) {
     return webdriver.wait(function () {
       return webdriver.executeScript(script);
-    });
+    }, timeout);
   };
 
-  function forActionable(actionSequence, timeout = 10000) {
+  function forUsable(buttons) {
+
+  }
+
+  function forActionable(actionSequence, timeout = DEFAULT_TIMEOUT) {
     return until(function() {
       return actionSequence.perform();
-    });
+    }, timeout);
   };
 
   function ms(millis) {
@@ -167,6 +227,7 @@ function Waiter(webdriver) {
   return {
     forActionable,
     forButton,
+    forCheckbox,
     forElement,
     forFieldNamed,
     forLink,
