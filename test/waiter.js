@@ -15,12 +15,10 @@ test('waiter - is exposed in action', function(t) {
 
 test('waiter - until returns when predicate returns true', function(t) {
   var waits = 0;
-  return new Ottomaton({headless: true}).register(require('../lib/.')).register('test', function() {
-    return this.wait.until(function() {
-      waits ++;
-
-      return waits === 5;
-    }, 1000, 100);
+  return new Ottomaton({headless: true})
+    .register(require('../lib/.'))
+    .register('test', function() {
+    return this.wait.until(() => ++waits === 5, 1000, 100);
   }).run('test');
 });
 

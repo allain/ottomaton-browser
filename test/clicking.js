@@ -21,16 +21,16 @@ test('clicking - all kinds of buttons supported', function(t) {
   });
 });
 
-test.only('clicking - checking checkbox works', function(t) {
+test('clicking - checking checkbox works', function(t) {
   return Ottomaton().register(require('../lib/.')).run([
     'Open file://' + path.resolve(__dirname, 'fixtures/page1.html'),
     'Check Checkbox check1',
     'Wait for Text check1 clicked',
     'Check Checkbox offscreen-check2',
     'Wait for Text offscreen-check2 clicked'
-  ]).then(function(result) {
-
-  });
+  ]).catch(err => {
+      t.fail(err.stack || err)
+  })
 });
 
 test('clicking - on missing buttons times out', function(t) {
